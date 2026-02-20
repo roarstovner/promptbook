@@ -1,0 +1,9 @@
+^LICENSE\.md$
+^\.chainlink$
+^\.claude$
+^CLAUDE\.md$
+^CHANGELOG\.md$
+^design$
+^research_.*\.md$
+^README\.md$
+^\.mcp\.json$

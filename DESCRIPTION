@@ -1,11 +1,26 @@
 Package: promptbook
-Title: What the Package Does (One Line, Title Case)
+Title: Documented, Reproducible, Reusable Data Annotation with LLMs
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+    person("Roar", "Bakken Stovner", , "robast@oslomet.no", role = c("aut", "cre"))
+Description: Define coding instruments as structured YAML promptbooks and apply
+    them to datasets using large language models via 'ellmer'. Supports
+    categorical, numeric, boolean, text, and object variable types with
+    per-variable model dispatch and automatic variable grouping.
+License: MIT + file LICENSE
+Imports:
+    cli,
+    ellmer,
+    glue,
+    rlang,
+    tibble,
+    tidyselect,
+    yaml
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
+Suggests:
+    haven,
+    quarto,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

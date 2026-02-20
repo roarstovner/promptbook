@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Set up package skeleton (DESCRIPTION, namespace, testthat) (#9)
 - Define package infrastructure (#6)
 - Design the codebook renderer (#5)
 - Design the ellmer bridge (#4)
