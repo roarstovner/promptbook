@@ -10,11 +10,6 @@ Description: Define coding instruments as structured YAML promptbooks and apply
 License: MIT + file LICENSE
 Imports:
     cli,
-    ellmer,
-    glue,
-    rlang,
-    tibble,
-    tidyselect,
     yaml
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -22,5 +17,6 @@ RoxygenNote: 7.3.3
 Suggests:
     haven,
     quarto,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    withr
 Config/testthat/edition: 3

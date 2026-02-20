@@ -13,6 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Validate groups and cross-references (#14)
+- Validate type-specific fields (#13)
+- Validate required fields and top-level structure (#12)
+- YAML parsing and promptbook S3 class (#11)
+- Implement read_promptbook() (#10)
 - Set up package skeleton (DESCRIPTION, namespace, testthat) (#9)
 - Define package infrastructure (#6)
 - Design the codebook renderer (#5)
