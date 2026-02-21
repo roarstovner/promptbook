@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Implement pb_type() (#15)
 - Validate groups and cross-references (#14)
 - Validate type-specific fields (#13)
 - Validate required fields and top-level structure (#12)

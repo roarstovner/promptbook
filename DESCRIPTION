@@ -10,6 +10,8 @@ Description: Define coding instruments as structured YAML promptbooks and apply
 License: MIT + file LICENSE
 Imports:
     cli,
+    ellmer,
+    rlang,
     yaml
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
