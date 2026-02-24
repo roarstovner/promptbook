@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Result reassembly and column typing (#21)
+- Prompt interpolation and ellmer dispatch (#20)
+- Variable grouping and per-model dispatch logic (#19)
+- Implement pb_annotate() (#18)
 - Implement pb_type() (#15)
 - Validate groups and cross-references (#14)
 - Validate type-specific fields (#13)
