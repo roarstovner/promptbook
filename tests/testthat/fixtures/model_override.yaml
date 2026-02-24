@@ -1,0 +1,39 @@
+schema_version: 1
+title: "Model override test"
+version: "1.0.0"
+prompt:
+  system: "You are a coder."
+
+variables:
+  - name: topic
+    description: "The topic"
+    type: categorical
+    categories:
+      - value: "a"
+        description: "Category A"
+      - value: "b"
+        description: "Category B"
+    group: basic
+
+  - name: sentiment
+    description: "The sentiment"
+    type: numeric
+    min: 1
+    max: 5
+    group: basic
+    model: sonnet
+
+  - name: frame
+    description: "The frame"
+    type: categorical
+    categories:
+      - value: "x"
+        description: "Frame X"
+      - value: "y"
+        description: "Frame Y"
+    group: basic
+
+groups:
+  basic:
+    label: "Basic codes"
+    model: haiku

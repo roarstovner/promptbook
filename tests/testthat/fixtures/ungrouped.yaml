@@ -1,0 +1,21 @@
+schema_version: 1
+title: "Ungrouped test"
+version: "1.0.0"
+prompt:
+  system: "You are a coder."
+
+variables:
+  - name: topic
+    description: "The topic"
+    type: categorical
+    categories:
+      - value: "a"
+        description: "Category A"
+      - value: "b"
+        description: "Category B"
+
+  - name: sentiment
+    description: "The sentiment"
+    type: numeric
+    min: 1
+    max: 5
