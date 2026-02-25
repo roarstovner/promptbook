@@ -1,110 +1,179 @@
-# Promptbook -- an R package for documented, reproducible, reusable data annotation with LLMs
 
-> [!WARNING]
-> Promptbook is under active development and the first alpha is not yet released. Below is my ambition for the project.
+# promptbook
 
-My idea with promptbook is that data annotation with LLMs in R need a package that's well suited for research workflows. The typical case is when a researcher has a dataset with text snippets that should be coded with a coding instrument. The text snippets might be abstracts for journal articles, newspaper headlines, curricula in different countries, etc. The coding instrument is how to assign several codes (categorical or numeric or other) to each text snippet. There may be many codes, both 5 and 20 will be common. Promptbook must help the researcher
+<!-- badges: start -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+<!-- badges: end -->
 
-- make a codebook with information enough to assign the codes for a human coder
-- have a "promptbook" with the LLM prompt (together with tool usage answer format, etc.) for an LLM to assign the codes
-- a way to apply the promptbook to a dataset using `ellmer::`, either batched, in parallell, local, or otherwise.
+Documented, reproducible, reusable data annotation with LLMs.
 
-I use "promptbook" to refer to both the codebook and promptbook.
- 
-Requirements:
+promptbook lets you define a coding instrument as a structured YAML file ---
+the **promptbook** --- and apply it to datasets using large language models
+via [ellmer](https://ellmer.tidyverse.org). The same YAML file drives the
+LLM prompts, a human-readable codebook, and properly typed R output.
 
-- the promptbook can generate a human readable codebook, maybe with codebookr or another backend
-- the promptbook is stored in a standard format as one or more files
-- the promptbook can very easily be applied to data with ellmer
+## Installation
 
-Here's an example of what I have in mind. First define a promptbook in yaml:
+``` r
+# install.packages("pak")
+pak::pak("robast/promptbook")
+```
 
-```yaml
-# Example promptbook: Media framing of climate policy
-# This is a complete, realistic example of a promptbook YAML file.
+## Quick start
 
+**1. Write a promptbook YAML file** with your coding instrument:
+
+``` yaml
 schema_version: 1
-title: "Media Framing Codebook"
-version: "1.0.0"
-description: >
-  Coding instrument for newspaper coverage of climate policy.
-  Adapted from Semetko & Valkenburg (2000) framing typology.
-author: "Jane Researcher"
+title: "Sentiment Codebook"
 
 prompt:
   system: |
-    You are an expert content analyst trained in media framing analysis.
-    You will be given a newspaper article and must code it according to
-    the codebook variables defined below.
-
-    Guidelines:
-    - Read the full article before coding any variable.
-    - Be conservative: if unsure between two categories, choose the
-      more neutral or general option.
-    - For the sentiment scale, use the full range; reserve 3 for
-      articles that are genuinely balanced.
-  user: |
-    Please code the following newspaper article:
-
-    {text}
+    You are an expert content analyst. Code the text according
+    to the variables below.
 
 variables:
-  # --- Basic codes (group: basic) ---
-  - name: topic
-    label: "Primary topic"
-    description: >
-      The dominant topic of the article. Choose the single best fit
-      based on which topic receives the most coverage.
-    type: categorical
-    categories:
-      - value: "economy"
-        label: "Economic impacts"
-        description: "Focus on costs, jobs, GDP, trade effects of climate policy"
-      - value: "health"
-        label: "Public health"
-        description: "Focus on health outcomes, disease, air quality"
-      - value: "environment"
-        label: "Environmental impacts"
-        description: "Focus on ecosystems, biodiversity, emissions, pollution"
-      - value: "politics"
-        label: "Political process"
-        description: "Focus on legislation, elections, party positions, lobbying"
-      - value: "technology"
-        label: "Technology and innovation"
-        description: "Focus on renewable energy, carbon capture, tech solutions"
-      - value: "other"
-        label: "Other"
-        description: "Does not fit any of the above categories"
-    group: basic
-
   - name: sentiment
-    label: "Overall policy sentiment"
-    description: >
-      The overall evaluative tone of the article toward the climate
-      policy discussed. Use the full scale; reserve 3 for articles
-      that are genuinely balanced with no detectable lean.
+    label: "Overall sentiment"
+    description: "The overall evaluative tone. Use the full scale."
     type: numeric
     min: 1
     max: 5
     labels:
       1: "Very negative"
-      2: "Somewhat negative"
-      3: "Neutral / balanced"
-      4: "Somewhat positive"
+      3: "Neutral"
       5: "Very positive"
-    group: basic
+
+  - name: topic
+    label: "Primary topic"
+    description: "The dominant topic of the text."
+    type: categorical
+    categories:
+      - value: "economy"
+        label: "Economic impacts"
+      - value: "health"
+        label: "Public health"
+      - value: "environment"
+        label: "Environmental impacts"
 ```
 
-Then, you can code your data with this promptbook:
+**2. Read and annotate:**
 
-```r
+``` r
 library(promptbook)
+library(ellmer)
 
-pb <- read_promptbook("media_framing.yaml")
-articles <- read.csv("articles.csv")
-results <- pb_annotate(articles, pb, text = article_text)
+pb <- read_promptbook("codebook.yaml")
 
-# results is a data frame with all original columns + coded variables
-table(results$topic)
-mean(results$sentiment)
+articles <- data.frame(
+  id   = 1:100,
+  text = my_article_texts
+)
+
+results <- articles |>
+  pb_annotate(pb, chat = chat_anthropic())
+
+results$sentiment  # integer
+results$topic      # factor
+```
+
+That's it. `pb_annotate()` handles prompt interpolation, structured output
+schemas, variable grouping, per-model dispatch, and result typing.
+
+## Why promptbook?
+
+Research workflows need a coding instrument that serves multiple purposes:
+LLM prompts, human codebooks, documentation for paper appendices. Without
+promptbook, these tend to drift apart. With promptbook, the YAML file is
+the **single source of truth** --- change it once, and everything updates.
+
+Key features:
+
+- **Five variable types**: `categorical`, `numeric`, `text`, `boolean`,
+  and `object`. (Use `multiple: true` for arrays)
+- **Variable grouping**: LLMs struggle with many variables; use `group` to split
+  variables across separate LLM calls
+- **Per-model dispatch**: Use fast/cheap models for simple codes and
+  stronger models for complex ones
+- **Properly typed output**: Factors with ordered levels, integers,
+  list-columns for multi-valued variables
+- **Human-readable codebook**: Render the same YAML as an HTML or PDF
+  document for appendices or human coders
+- **Labelled results and SPSS/Stata export**: Convert results to haven-labelled format
+
+## API overview
+
+| Function | Purpose |
+|---|---|
+| `read_promptbook()` | Read and validate a YAML file |
+| `pb_annotate()` | Annotate a data frame using the promptbook |
+| `pb_type()` | Convert to an `ellmer::type_object()` for direct use with ellmer |
+| `pb_render()` | Render a human-readable codebook (HTML or PDF) |
+| `pb_as_labelled()` | Convert results to haven-labelled columns for SPSS/Stata |
+
+## Variable grouping and per-model dispatch
+
+For large instruments or when different codes need different models, assign
+variables to groups:
+
+``` yaml
+variables:
+  - name: topic
+    group: basic
+    # ...
+  - name: frame
+    group: framing
+    # ...
+
+groups:
+  basic:
+    model: fast
+  framing:
+    model: strong
+```
+
+`pb_annotate()` dispatches one extraction call per group, using the
+specified model for each:
+
+``` r
+chat <- list(
+  fast   = chat_anthropic(model = "claude-haiku"),
+  strong = chat_anthropic(model = "claude-sonnet")
+)
+
+results <- pb_annotate(articles, pb, chat)
+```
+
+## Power-user workflow
+
+If you need full control over the chat (custom turns, tool use, thinking),
+use `pb_type()` directly with ellmer:
+
+``` r
+library(ellmer)
+
+pb <- read_promptbook("codebook.yaml")
+type <- pb_type(pb, group = "basic")
+
+chat <- chat_anthropic(system_prompt = pb$prompt$system)
+result <- chat$chat_structured(
+  paste("Code this article:", article_text),
+  type = type
+)
+```
+
+## Rendering a codebook
+
+Generate a self-contained HTML or PDF codebook from the same YAML:
+
+``` r
+pb_render(pb, "codebook.html")
+pb_render(pb, "codebook.pdf", format = "typst")
+```
+
+## Labelled results and SPSS/Stata export
+
+``` r
+labelled_results <- pb_as_labelled(results, pb)
+haven::write_sav(labelled_results, "coded_articles.sav")
 ```
