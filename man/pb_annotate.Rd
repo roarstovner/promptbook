@@ -33,10 +33,42 @@ Controls how prompts are sent to the LLM.}
 }
 \value{
 A tibble with the original columns plus new columns for each
-promptbook variable, properly typed.
+promptbook variable, properly typed:
+\itemize{
+\item Categorical variables become factors (or list-columns if \code{multiple: true})
+\item Numeric variables become integers (or doubles if \code{integer: false})
+\item Text variables become character (or list-columns if \code{multiple: true})
+\item Boolean variables become logical
+\item Object variables become list-columns
+}
 }
 \description{
 The main convenience function for the promptbook package. Takes a data
 frame and a promptbook, handles variable grouping by (group, model),
 dispatches to ellmer for LLM extraction, and returns properly typed columns.
+}
+\examples{
+path <- system.file("examples", "media_framing.yaml", package = "promptbook")
+pb <- read_promptbook(path)
+
+\dontrun{
+library(ellmer)
+
+# Single model (no groups/model overrides)
+chat <- chat_anthropic(model = "claude-sonnet")
+result <- pb_annotate(articles, pb, chat)
+
+# Multiple models (matching promptbook groups)
+chat <- list(
+  haiku  = chat_anthropic(model = "claude-haiku"),
+  sonnet = chat_anthropic(model = "claude-sonnet")
+)
+result <- pb_annotate(articles, pb, chat)
+
+# Sequential for debugging
+result <- pb_annotate(articles, pb, chat, method = "sequential")
+
+# Multiple text columns
+result <- pb_annotate(articles, pb, chat, text = c(title, abstract))
+}
 }

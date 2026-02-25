@@ -6,7 +6,25 @@
 \alias{promptbook-package}
 \title{promptbook: Documented, Reproducible, Reusable Data Annotation with LLMs}
 \description{
-Define coding instruments as structured YAML promptbooks and apply them to datasets using large language models via 'ellmer'. Supports categorical, numeric, boolean, text, and object variable types with per-variable model dispatch and automatic variable grouping.
+Define coding instruments as structured YAML files and apply them to
+datasets using large language models via ellmer. The YAML file --- the
+"promptbook" --- is the single source of truth: it generates both
+human-readable codebooks and structured LLM prompts.
+\subsection{Key functions}{
+\itemize{
+\item \code{\link[=read_promptbook]{read_promptbook()}} reads and validates a YAML file
+\item \code{\link[=pb_annotate]{pb_annotate()}} annotates a data frame using LLMs
+\item \code{\link[=pb_type]{pb_type()}} converts a promptbook to an ellmer type object
+\item \code{\link[=pb_render]{pb_render()}} renders a human-readable codebook (HTML or PDF)
+\item \code{\link[=pb_as_labelled]{pb_as_labelled()}} converts results to SPSS/Stata format
+}
+}
+}
+\seealso{
+\itemize{
+\item \code{vignette("promptbook")} for a getting-started guide
+\item \code{vignette("ellmer")} for power-user workflows with ellmer
+}
 }
 \author{
 \strong{Maintainer}: Roar Bakken Stovner \email{robast@oslomet.no}

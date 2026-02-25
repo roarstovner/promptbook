@@ -17,9 +17,38 @@
 #' @param ... Additional arguments passed to the ellmer dispatch function.
 #'
 #' @return A tibble with the original columns plus new columns for each
-#'   promptbook variable, properly typed.
+#'   promptbook variable, properly typed:
+#'   - Categorical variables become factors (or list-columns if `multiple: true`)
+#'   - Numeric variables become integers (or doubles if `integer: false`)
+#'   - Text variables become character (or list-columns if `multiple: true`)
+#'   - Boolean variables become logical
+#'   - Object variables become list-columns
 #'
 #' @export
+#' @examples
+#' path <- system.file("examples", "media_framing.yaml", package = "promptbook")
+#' pb <- read_promptbook(path)
+#'
+#' \dontrun{
+#' library(ellmer)
+#'
+#' # Single model (no groups/model overrides)
+#' chat <- chat_anthropic(model = "claude-sonnet")
+#' result <- pb_annotate(articles, pb, chat)
+#'
+#' # Multiple models (matching promptbook groups)
+#' chat <- list(
+#'   haiku  = chat_anthropic(model = "claude-haiku"),
+#'   sonnet = chat_anthropic(model = "claude-sonnet")
+#' )
+#' result <- pb_annotate(articles, pb, chat)
+#'
+#' # Sequential for debugging
+#' result <- pb_annotate(articles, pb, chat, method = "sequential")
+#'
+#' # Multiple text columns
+#' result <- pb_annotate(articles, pb, chat, text = c(title, abstract))
+#' }
 pb_annotate <- function(data,
                         promptbook,
                         chat,
