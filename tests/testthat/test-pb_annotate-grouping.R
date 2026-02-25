@@ -32,24 +32,24 @@ test_that("each step has group, model, variables, type fields", {
   }
 })
 
-test_that("basic group gets 4 variables with model haiku", {
+test_that("basic group gets 4 variables with model fast", {
   pb <- read_media()
   plan <- pb_execution_plan(pb)
   basic <- Filter(function(s) s$group == "basic", plan)
   expect_length(basic, 1)
   basic <- basic[[1]]
-  expect_equal(basic$model, "haiku")
+  expect_equal(basic$model, "fast")
   expect_setequal(basic$variables, c("topic", "sentiment", "topics_all", "has_data"))
 })
 
-test_that("framing group gets 4 variables with model sonnet", {
+test_that("framing group gets 4 variables with model strong", {
   pb <- read_media()
   plan <- pb_execution_plan(pb)
 
   framing <- Filter(function(s) s$group == "framing", plan)
   expect_length(framing, 1)
   framing <- framing[[1]]
-  expect_equal(framing$model, "sonnet")
+  expect_equal(framing$model, "strong")
   expect_setequal(framing$variables, c("frame", "source_diversity", "key_quote", "actors"))
 })
 
@@ -75,18 +75,18 @@ test_that("ungrouped variables go to .default group with NULL model", {
 test_that("per-variable model override splits group into separate steps", {
   pb <- read_override()
   plan <- pb_execution_plan(pb)
-  # sentiment has model: sonnet, overriding group model: haiku
+  # sentiment has model: strong, overriding group model: fast
 
-  # So basic group splits into haiku step and sonnet step
+  # So basic group splits into fast step and strong step
   expect_length(plan, 2)
 
-  haiku_step <- Filter(function(s) identical(s$model, "haiku"), plan)
-  expect_length(haiku_step, 1)
-  expect_setequal(haiku_step[[1]]$variables, c("topic", "frame"))
+  fast_step <- Filter(function(s) identical(s$model, "fast"), plan)
+  expect_length(fast_step, 1)
+  expect_setequal(fast_step[[1]]$variables, c("topic", "frame"))
 
-  sonnet_step <- Filter(function(s) identical(s$model, "sonnet"), plan)
-  expect_length(sonnet_step, 1)
-  expect_equal(sonnet_step[[1]]$variables, "sentiment")
+  strong_step <- Filter(function(s) identical(s$model, "strong"), plan)
+  expect_length(strong_step, 1)
+  expect_equal(strong_step[[1]]$variables, "sentiment")
 })
 
 # -- pb_resolve_chat() -------------------------------------------------------
@@ -98,17 +98,17 @@ test_that("single Chat errors when models are needed", {
   mock_chat <- structure(list(), class = "Chat")
   expect_error(
     pb_resolve_chat(mock_chat, plan, "system prompt"),
-    "haiku.*sonnet|sonnet.*haiku"
+    "fast.*strong|strong.*fast"
   )
 })
 
 test_that("named list errors on missing model", {
   pb <- read_media()
   plan <- pb_execution_plan(pb)
-  mock_haiku <- structure(list(), class = "Chat")
+  mock_fast <- structure(list(), class = "Chat")
   expect_error(
-    pb_resolve_chat(list(haiku = mock_haiku), plan, "system prompt"),
-    "sonnet"
+    pb_resolve_chat(list(fast = mock_fast), plan, "system prompt"),
+    "strong"
   )
 })
 
@@ -148,7 +148,7 @@ test_that("named list matches models to steps", {
     obj
   }
 
-  chats <- list(haiku = make_mock(), sonnet = make_mock())
+  chats <- list(fast = make_mock(), strong = make_mock())
   result <- pb_resolve_chat(chats, plan, "system prompt")
   expect_length(result, 2)
 })

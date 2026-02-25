@@ -60,8 +60,8 @@ result <- pb_annotate(articles, pb, chat)
 
 # Multiple models (matching promptbook groups)
 chat <- list(
-  haiku  = chat_anthropic(model = "claude-haiku"),
-  sonnet = chat_anthropic(model = "claude-sonnet")
+  fast   = chat_anthropic(model = "claude-haiku"),
+  strong = chat_anthropic(model = "claude-sonnet")
 )
 result <- pb_annotate(articles, pb, chat)
 

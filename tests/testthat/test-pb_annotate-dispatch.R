@@ -149,7 +149,7 @@ test_that("pb_annotate accepts path string for promptbook", {
   )
 
   result <- suppressWarnings(
-    pb_annotate(data, path, chat = list(haiku = make_mock(), sonnet = make_mock()))
+    pb_annotate(data, path, chat = list(fast = make_mock(), strong = make_mock()))
   )
   expect_s3_class(result, "tbl_df")
   # Should have original column + annotation columns

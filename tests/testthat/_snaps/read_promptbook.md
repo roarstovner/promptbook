@@ -6,7 +6,7 @@
       # A promptbook: Media Framing Codebook
       # Version: 1.0.0
       # Variables: 8 (2 groups)
-      # Groups: basic (haiku), framing (sonnet)
+      # Groups: basic (fast), framing (strong)
 
 # print.pb_variable produces expected output
 

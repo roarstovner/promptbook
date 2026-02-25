@@ -191,10 +191,10 @@ variables:
 groups:
   basic:
     label: "Basic codes"
-    model: haiku
+    model: fast
   framing:
     label: "Framing analysis"
-    model: sonnet
+    model: strong
 ```
 
 Variables in the same group are extracted in one LLM call. Each group can
@@ -229,8 +229,8 @@ library(ellmer)
 
 # Create chat objects for each model used in the promptbook
 chat <- list(
-  haiku  = chat_anthropic(model = "claude-haiku"),
-  sonnet = chat_anthropic(model = "claude-sonnet")
+  fast   = chat_anthropic(model = "claude-haiku"),
+  strong = chat_anthropic(model = "claude-sonnet")
 )
 
 # Your data --- must have a column matching the {text} placeholder

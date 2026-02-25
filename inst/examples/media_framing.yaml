@@ -188,8 +188,8 @@ groups:
   basic:
     label: "Basic codes"
     description: "Straightforward codes suitable for fast models"
-    model: haiku
+    model: fast
   framing:
     label: "Framing analysis"
     description: "Complex interpretive codes requiring stronger reasoning"
-    model: sonnet
+    model: strong

@@ -88,7 +88,7 @@ variables:
       - value: "responsibility"
         label: "Responsibility attribution"
     group: framing
-    model: sonnet
+    model: strong
 
   - name: key_quote
     label: "Key quote"
@@ -157,11 +157,11 @@ groups:
   basic:
     label: "Basic codes"
     description: "Simple codes that can be assigned quickly"
-    model: haiku
+    model: fast
   framing:
     label: "Framing analysis"
     description: "More complex interpretive codes"
-    model: sonnet
+    model: strong
 ```
 
 ## Field reference

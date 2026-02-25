@@ -7,12 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Update model aliases from provider-specific to semantic names (#25)
 - Survey other languages for similar packages and evaluate porting vs designing from scratch (#3)
 - Assess whether promptbook R package is redundant with existing tools (#2)
 
 ### Fixed
 
 ### Changed
+- Update model aliases from provider-specific (`haiku`/`sonnet`) to semantic names (`fast`/`strong`) (#25)
+- Write package documentation and vignettes (#24)
+- Implement pb_render() (#23)
+- Implement pb_as_labelled() (#22)
 - Implement pb_render() (#23)
 - Implement pb_as_labelled() (#22)
 - Result reassembly and column typing (#21)

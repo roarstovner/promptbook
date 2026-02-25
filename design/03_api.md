@@ -53,7 +53,7 @@ pb
 #> # A promptbook: Media Framing Codebook
 #> # Version: 1.0.0
 #> # Variables: 8 (2 groups)
-#> # Groups: basic (haiku), framing (sonnet)
+#> # Groups: basic (fast), framing (strong)
 ```
 
 ### Accessor convenience
@@ -243,8 +243,8 @@ Column names are matched to placeholder names in the user template. If the YAML 
 When variables have different model assignments (via `model` on the variable or group), `pb_annotate()` creates separate chat objects for each model. The `chat` argument serves as a template — its provider and configuration are preserved, only the model changes.
 
 For example, with the media framing codebook:
-- Group `basic` (model: haiku) → one `parallel_chat_structured()` call with haiku for `topic`, `sentiment`, `topics_all`, `has_data`
-- Group `framing` (model: sonnet) → one `parallel_chat_structured()` call with sonnet for `frame`, `source_diversity`, `key_quote`, `actors`
+- Group `basic` (model: fast) → one `parallel_chat_structured()` call with fast for `topic`, `sentiment`, `topics_all`, `has_data`
+- Group `framing` (model: strong) → one `parallel_chat_structured()` call with strong for `frame`, `source_diversity`, `key_quote`, `actors`
 
 Each group shares the same system prompt but extracts only its own variables.
 
@@ -254,8 +254,8 @@ Each group shares the same system prompt but extracts only its own variables.
 
 ```
 Annotating 500 articles...
-✔ Group 'basic' (haiku): 500/500 [12s]
-✔ Group 'framing' (sonnet): 500/500 [45s]
+✔ Group 'basic' (fast): 500/500 [12s]
+✔ Group 'framing' (strong): 500/500 [45s]
 ```
 
 ## `pb_render()`

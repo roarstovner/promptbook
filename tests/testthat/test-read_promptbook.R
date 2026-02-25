@@ -46,7 +46,7 @@ test_that("read_promptbook parses media_framing.yaml correctly", {
 
   # Groups
   expect_named(pb$groups, c("basic", "framing"))
-  expect_equal(pb$groups$basic$model, "haiku")
+  expect_equal(pb$groups$basic$model, "fast")
 })
 
 test_that("all variable types are correctly subclassed", {
@@ -465,7 +465,7 @@ variables:
       - name: inner
         type: text
         description: "A prop"
-        model: haiku
+        model: fast
 '
   path <- write_yaml_temp(yaml)
   expect_error(read_promptbook(path), "model.*not allowed on object properties")
