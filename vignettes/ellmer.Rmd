@@ -1,0 +1,180 @@
+---
+title: "Using promptbook with ellmer directly"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using promptbook with ellmer directly}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The `pb_annotate()` convenience function handles the full annotation
+pipeline. But sometimes you need more control --- custom prompts per row,
+different extraction strategies, or integration with your own workflow.
+This vignette shows how to use `pb_type()` to get an ellmer type object
+and work with it directly.
+
+## From YAML to ellmer type
+
+`pb_type()` converts a promptbook (or a subset of its variables) into
+an `ellmer::type_object()`. This is the bridge between the YAML schema
+and ellmer's structured data extraction.
+
+```{r}
+library(promptbook)
+
+path <- system.file("examples", "media_framing.yaml", package = "promptbook")
+pb <- read_promptbook(path)
+
+# Convert all variables to an ellmer type
+type_all <- pb_type(pb)
+type_all
+```
+
+### Subsetting by group
+
+Extract only variables from a specific group:
+
+```{r}
+type_basic <- pb_type(pb, group = "basic")
+type_basic
+```
+
+### Subsetting by name
+
+Pick specific variables:
+
+```{r}
+type_sub <- pb_type(pb, variables = c("topic", "sentiment"))
+type_sub
+```
+
+## Using with ellmer directly
+
+Once you have a type object, use it with any ellmer chat method:
+
+```{r, eval = FALSE}
+library(ellmer)
+
+chat <- chat_anthropic(
+  model = "claude-sonnet",
+  system_prompt = pb$prompt$system
+)
+
+# Single text
+result <- chat$chat_structured(
+  "The government announced a $2 billion climate fund...",
+  type = type_basic
+)
+result
+
+# Multiple texts in parallel
+texts <- list(
+  "Article about economic impacts...",
+  "Article about health policy...",
+  "Article about renewable energy..."
+)
+
+results <- parallel_chat_structured(chat, texts, type = type_basic)
+results
+```
+
+## Type mapping reference
+
+Each YAML variable type maps to an ellmer type function. The variable's
+`description` field is enriched with type-specific information (categories,
+scale endpoints, etc.) and passed as the type description:
+
+```{r, echo = FALSE}
+mapping <- data.frame(
+  YAML = c("categorical", "categorical (multiple)", "numeric",
+           "numeric (integer: false)", "text", "text (multiple)",
+           "boolean", "object", "object (multiple)"),
+  ellmer = c("type_enum()", "type_array(type_enum())", "type_integer()",
+             "type_number()", "type_string()", "type_array(type_string())",
+             "type_boolean()", "type_object()", "type_array(type_object())")
+)
+knitr::kable(mapping, col.names = c("YAML type", "ellmer function"))
+```
+
+## Example: custom per-row prompts
+
+One reason to use `pb_type()` directly is when each row needs a different
+prompt --- for example, if context varies across observations:
+
+```{r, eval = FALSE}
+library(ellmer)
+
+type <- pb_type(pb, group = "basic")
+
+chat <- chat_anthropic(
+  model = "claude-haiku",
+  system_prompt = pb$prompt$system
+)
+
+results <- lapply(seq_len(nrow(articles)), function(i) {
+  # Build a custom prompt for each row
+  prompt <- sprintf(
+    "Country context: %s\n\nArticle:\n%s",
+    articles$country[i],
+    articles$text[i]
+  )
+  cloned <- chat$clone()
+  cloned$chat_structured(prompt, type = type)
+})
+
+do.call(rbind, results)
+```
+
+## Example: two-stage annotation
+
+Another use case is running a fast model first, then a stronger model
+only for uncertain cases:
+
+```{r, eval = FALSE}
+library(ellmer)
+
+# Stage 1: fast model on everything
+type_basic <- pb_type(pb, group = "basic")
+
+chat_fast <- chat_anthropic(model = "claude-haiku",
+                            system_prompt = pb$prompt$system)
+stage1 <- parallel_chat_structured(chat_fast, texts, type = type_basic)
+
+# Stage 2: strong model only where sentiment is neutral (uncertain)
+uncertain <- which(stage1$sentiment == 3)
+
+if (length(uncertain) > 0) {
+  chat_strong <- chat_anthropic(model = "claude-sonnet",
+                                system_prompt = pb$prompt$system)
+  stage2 <- parallel_chat_structured(
+    chat_strong, texts[uncertain], type = type_basic
+  )
+  stage1[uncertain, ] <- stage2
+}
+```
+
+## The pb_var_to_type() generic
+
+For even finer control, `pb_var_to_type()` converts a single variable
+to its ellmer type. This is the S3 generic that `pb_type()` uses
+internally:
+
+```{r}
+# Get a single variable
+var <- pb$variables[[1]]
+var
+
+# Convert to ellmer type
+ellmer_type <- pb_var_to_type(var)
+ellmer_type
+```
+
+This is useful if you need to compose type objects manually or inspect
+how a specific variable maps to ellmer.

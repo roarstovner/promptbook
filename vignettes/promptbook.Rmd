@@ -1,0 +1,314 @@
+---
+title: "Getting started with promptbook"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with promptbook}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The promptbook package helps researchers annotate text data with LLMs in a
+documented, reproducible way. You define your coding instrument once as a
+YAML file --- the **promptbook** --- and the package handles turning it into
+structured LLM prompts, a human-readable codebook, and properly typed R output.
+
+## The YAML file
+
+A promptbook YAML file is the single source of truth for your coding
+instrument. It contains everything needed to generate both a human codebook
+and structured LLM prompts.
+
+Here's a minimal example:
+
+```yaml
+schema_version: 1
+title: "Sentiment Codebook"
+author: "Jane Researcher"
+
+prompt:
+  system: |
+    You are an expert content analyst. You will be given a text
+    and must code it according to the variables below.
+
+variables:
+  - name: sentiment
+    label: "Overall sentiment"
+    description: >
+      The overall evaluative tone of the text.
+      Use the full scale; reserve 3 for genuinely neutral texts.
+    type: numeric
+    min: 1
+    max: 5
+    labels:
+      1: "Very negative"
+      2: "Somewhat negative"
+      3: "Neutral"
+      4: "Somewhat positive"
+      5: "Very positive"
+```
+
+### Top-level fields
+
+| Field | Required | Description |
+|---|---|---|
+| `schema_version` | yes | Integer; currently `1`. For forward compatibility. |
+| `title` | yes | Human-readable title for the coding instrument. |
+| `version` | no | Semantic version for the codebook (e.g., `"1.2.0"`). |
+| `description` | no | Longer description; appears in the rendered codebook. |
+| `author` | no | Author name(s). |
+
+### The `prompt` section
+
+| Field | Required | Description |
+|---|---|---|
+| `system` | yes | System prompt sent to the LLM. |
+| `user` | no | User message template with `{text}` placeholder. Defaults to `"{text}"` if omitted. |
+
+The system prompt is your main lever for controlling LLM behavior. Variable
+descriptions are embedded automatically in the structured output schema,
+so you don't need to repeat them in the prompt.
+
+If your data has multiple text columns (e.g., title and abstract), use
+named placeholders:
+
+```yaml
+prompt:
+  user: |
+    Title: {title}
+    Abstract: {abstract}
+```
+
+### Variable types
+
+Each variable in the `variables` list defines one code to assign. Every
+variable needs `name`, `type`, and `description`. The five types are:
+
+**`categorical`** --- pick one (or many) from a set of categories:
+
+```yaml
+- name: topic
+  label: "Primary topic"
+  description: "The dominant topic of the article."
+  type: categorical
+  categories:
+    - value: "economy"
+      label: "Economic impacts"
+      description: "Focus on costs, jobs, trade effects"
+    - value: "health"
+      label: "Public health"
+    - value: "environment"
+      label: "Environmental impacts"
+```
+
+Add `multiple: true` for "select all that apply" questions.
+
+**`numeric`** --- an integer or continuous scale:
+
+```yaml
+- name: sentiment
+  description: "Overall tone. Use the full scale."
+  type: numeric
+  min: 1
+  max: 5
+  labels:
+    1: "Very negative"
+    5: "Very positive"
+```
+
+Defaults to integer; set `integer: false` for continuous values.
+
+**`text`** --- free-form text response:
+
+```yaml
+- name: key_quote
+  description: "The most representative direct quote."
+  type: text
+```
+
+**`boolean`** --- yes/no:
+
+```yaml
+- name: has_data
+  description: "Whether the article cites quantitative data."
+  type: boolean
+```
+
+**`object`** --- structured records (e.g., extracting actors):
+
+```yaml
+- name: actors
+  description: "All political actors quoted in the article."
+  type: object
+  multiple: true
+  properties:
+    - name: actor_name
+      type: text
+      description: "Full name"
+    - name: stance
+      type: categorical
+      description: "Stance on the policy"
+      categories:
+        - value: "support"
+        - value: "oppose"
+        - value: "neutral"
+```
+
+### Common variable fields
+
+| Field | Default | Description |
+|---|---|---|
+| `name` | (required) | Column name in output. Must be a valid R name. |
+| `label` | same as `name` | Human-readable label for the codebook. |
+| `description` | (required) | Sent to the LLM *and* printed in the codebook. |
+| `type` | (required) | One of: `categorical`, `numeric`, `text`, `boolean`, `object`. |
+| `required` | `false` | If `true`, forces the LLM to always produce a value. Keep `false` to avoid hallucination when data doesn't fit. |
+| `multiple` | `false` | If `true`, returns an array. Valid for `categorical`, `text`, `object`. |
+| `group` | (none) | Group name for batching variables into separate LLM calls. |
+| `model` | (none) | Model override for this variable (or set at the group level). |
+
+### Groups
+
+When you have many variables or want to use different models for different
+codes, define groups:
+
+```yaml
+variables:
+  - name: topic
+    # ...
+    group: basic
+
+  - name: frame
+    # ...
+    group: framing
+
+groups:
+  basic:
+    label: "Basic codes"
+    model: haiku
+  framing:
+    label: "Framing analysis"
+    model: sonnet
+```
+
+Variables in the same group are extracted in one LLM call. Each group can
+use a different model --- fast/cheap models for simple codes, stronger
+models for complex ones.
+
+## Reading a promptbook
+
+```{r}
+library(promptbook)
+
+path <- system.file("examples", "media_framing.yaml", package = "promptbook")
+pb <- read_promptbook(path)
+pb
+```
+
+All validation happens in `read_promptbook()`. If it returns without error,
+the YAML is valid. You can inspect the structure:
+
+```{r}
+pb$title
+pb$variables[[1]]
+```
+
+## Annotating data
+
+`pb_annotate()` is the main workhorse. It takes your data, the promptbook,
+and one or more [ellmer](https://ellmer.tidyverse.org) chat objects:
+
+```{r, eval = FALSE}
+library(ellmer)
+
+# Create chat objects for each model used in the promptbook
+chat <- list(
+  haiku  = chat_anthropic(model = "claude-haiku"),
+  sonnet = chat_anthropic(model = "claude-sonnet")
+)
+
+# Your data --- must have a column matching the {text} placeholder
+articles <- data.frame(
+  id   = 1:3,
+  text = c("Article about economic policy...",
+           "Article about health impacts...",
+           "Article about new technology...")
+)
+
+# Annotate!
+result <- pb_annotate(articles, pb, chat)
+result
+```
+
+The result is a tibble with your original columns plus new columns for each
+promptbook variable, properly typed (factors for categorical, integers for
+numeric, etc.).
+
+### Dispatch methods
+
+`pb_annotate()` supports three methods:
+
+- `"parallel"` (default) --- sends all prompts concurrently. Fast.
+- `"batch"` --- uses the batch API. 50% cheaper, but slow (up to 24h).
+- `"sequential"` --- one prompt at a time. Useful for debugging.
+
+```{r, eval = FALSE}
+result <- pb_annotate(articles, pb, chat, method = "sequential")
+```
+
+### Multiple text columns
+
+If your data has multiple text columns, use `{placeholder}` syntax in the
+YAML user template and select the columns in `pb_annotate()`:
+
+```{r, eval = FALSE}
+# YAML has: user: "Title: {title}\nAbstract: {abstract}"
+result <- pb_annotate(articles, pb, chat, text = c(title, abstract))
+```
+
+## Rendering a codebook
+
+Generate a human-readable codebook from the same YAML file:
+
+```{r, eval = FALSE}
+pb_render(pb, "codebook.html")
+```
+
+This produces a self-contained HTML document with all variable definitions,
+categories, and the system prompt --- suitable for paper appendices or
+sharing with human coders. PDF output via Typst is also supported:
+
+```{r, eval = FALSE}
+pb_render(pb, "codebook.pdf", format = "typst")
+```
+
+## Exporting to SPSS/Stata
+
+For researchers who work with SPSS or Stata, convert annotation results
+to haven-labelled format:
+
+```{r, eval = FALSE}
+labelled_result <- pb_as_labelled(result, pb)
+haven::write_sav(labelled_result, "coded_articles.sav")
+```
+
+Categorical variables become integer-coded with value labels, booleans
+become 0/1, and variable labels are attached from the YAML.
+
+## A complete example
+
+Here's the full media framing example that ships with the package:
+
+```{r, echo = FALSE, comment = ""}
+cat(readLines(path), sep = "\n")
+```
+
+This promptbook defines 8 variables in 2 groups, uses different models
+for simple vs. complex codes, and covers all five variable types including
+an `object` type for extracting structured actor records.
