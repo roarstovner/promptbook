@@ -1,0 +1,133 @@
+# Promptbook YAML template
+#
+# Copy this file into your project (e.g. as `codebook.yaml`) and edit the
+# placeholders below. Load it with `read_promptbook("codebook.yaml")`.
+#
+# A complete worked example lives at:
+#   system.file("examples/media_framing.yaml", package = "promptbook")
+# The full schema reference is in `design/02_yaml_schema.md`.
+
+# ---- Metadata ----
+schema_version: 1
+title: "My Coding Instrument"
+version: "0.1.0"
+description: >
+  Short description of the codebook -- what it codes, for which project,
+  and any relevant citations.
+author: "Your Name"
+
+# ---- Prompt ----
+# `system` carries the general instructions to the LLM.
+# `user` must contain the placeholder `{text}` (or other named placeholders
+# matched to columns when you call `pb_annotate()`).
+prompt:
+  system: |
+    You are an expert content analyst. You will be given a text and must
+    code it according to the codebook variables defined below.
+
+    Be conservative: if you are unsure between two categories, choose the
+    more neutral or general option.
+  user: |
+    Code the following text:
+
+    {text}
+
+# ---- Variables ----
+# Each entry defines one code to assign. Available types:
+#   categorical, numeric, text, boolean, object
+# Add `multiple: true` (categorical / text / object only) for
+# "select all that apply" or "list all X" variables.
+variables:
+
+  # Single-choice categorical variable.
+  - name: example_category
+    label: "Example category"
+    description: >
+      Replace this with a clear definition of what this code means.
+      The description is shown to the LLM and printed in the rendered codebook.
+    type: categorical
+    categories:
+      - value: "option_a"
+        label: "Option A"
+        description: "When to choose option A."
+      - value: "option_b"
+        label: "Option B"
+        description: "When to choose option B."
+      - value: "other"
+        label: "Other"
+        description: "Anything that does not fit the categories above."
+
+  # Numeric (e.g. Likert) scale.
+  - name: example_scale
+    label: "Example scale"
+    description: >
+      Replace with what the scale measures and how to use it. Mention any
+      anchor points or rules for the middle category.
+    type: numeric
+    min: 1
+    max: 5
+    labels:
+      1: "Strongly disagree"
+      2: "Disagree"
+      3: "Neutral"
+      4: "Agree"
+      5: "Strongly agree"
+
+  # Free-text variable.
+  - name: example_text
+    label: "Example free text"
+    description: >
+      Replace with what the LLM should write here -- e.g. a verbatim quote,
+      a short summary, or a named entity.
+    type: text
+
+  # Boolean (yes/no) variable.
+  - name: example_boolean
+    label: "Example yes/no"
+    description: >
+      Replace with the question the LLM is answering true / false.
+    type: boolean
+
+  # Multi-select example (uncomment to use).
+  # - name: example_multiselect
+  #   label: "Example select-all-that-apply"
+  #   description: "All categories that apply to this text."
+  #   type: categorical
+  #   multiple: true
+  #   categories:
+  #     - value: "a"
+  #     - value: "b"
+  #     - value: "c"
+
+  # Structured-record example (uncomment to use). Returns a tibble per row.
+  # - name: example_records
+  #   label: "Example structured records"
+  #   description: "All actors mentioned in the text."
+  #   type: object
+  #   multiple: true
+  #   properties:
+  #     - name: actor_name
+  #       type: text
+  #       description: "Full name as mentioned."
+  #     - name: stance
+  #       type: categorical
+  #       description: "Stance toward the topic."
+  #       categories:
+  #         - value: "support"
+  #         - value: "oppose"
+  #         - value: "neutral"
+
+# ---- Groups (optional) ----
+# Groups batch variables into separate LLM calls and let you assign different
+# models to different groups. Remove this section if you do not need it; tag
+# each variable with `group: <name>` to assign it.
+#
+# groups:
+#   basic:
+#     label: "Basic codes"
+#     description: "Straightforward codes suitable for a fast model"
+#     model: fast
+#   advanced:
+#     label: "Harder codes"
+#     description: "Interpretive codes that need a stronger model"
+#     model: strong

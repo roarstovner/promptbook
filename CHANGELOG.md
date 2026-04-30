@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Add a starter promptbook YAML template at inst/templates/promptbook.yaml (#29)
 - Update model aliases from provider-specific to semantic names (#25)
 - Survey other languages for similar packages and evaluate porting vs designing from scratch (#3)
 - Assess whether promptbook R package is redundant with existing tools (#2)
