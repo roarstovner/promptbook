@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Add pb_use_template() helper to copy starter promptbook YAML into user's project (#30)
 - Add a starter promptbook YAML template at inst/templates/promptbook.yaml (#29)
 - Update model aliases from provider-specific to semantic names (#25)
 - Survey other languages for similar packages and evaluate porting vs designing from scratch (#3)
@@ -15,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Verify full test suite passes after haven install (#31)
 - Update model aliases from provider-specific (`haiku`/`sonnet`) to semantic names (`fast`/`strong`) (#25)
 - Write package documentation and vignettes (#24)
 - Implement pb_render() (#23)
