@@ -25,6 +25,17 @@ A promptbook YAML file is the single source of truth for your coding
 instrument. It contains everything needed to generate both a human codebook
 and structured LLM prompts.
 
+The fastest way to start is to copy the bundled template into your project:
+
+```{r, eval = FALSE}
+library(promptbook)
+pb_use_template("codebook.yaml")
+```
+
+This writes a commented starter YAML file that you can edit in place. By
+default it refuses to overwrite an existing file; pass `overwrite = TRUE`
+if you really want to replace it.
+
 Here's a minimal example:
 
 ```yaml
