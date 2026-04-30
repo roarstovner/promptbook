@@ -19,8 +19,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Write package documentation and vignettes (#24)
 - Implement pb_render() (#23)
 - Implement pb_as_labelled() (#22)
-- Implement pb_render() (#23)
-- Implement pb_as_labelled() (#22)
 - Result reassembly and column typing (#21)
 - Prompt interpolation and ellmer dispatch (#20)
 - Variable grouping and per-model dispatch logic (#19)
